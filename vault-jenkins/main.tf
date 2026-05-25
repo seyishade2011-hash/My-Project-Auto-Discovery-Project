@@ -106,9 +106,20 @@ resource "aws_security_group" "sg" {
 }
 
 # Create a resource key pair
-resource "aws_key_pair" "key" { 
+resource "tls_private_key" "key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "local_file" "private_key" {
+  content = tls_private_key.key.private_key_pem
+  filename = "${local.name}-key.pem"
+  file_permission = "400"
+}
+
+resource "aws_key_pair" "public_key" { 
   key_name   = "${local.name}-key" 
-  public_key = file("~/.ssh/id_rsa.pub") 
+  public_key = tls_private_key.key.public_key_openssh 
 }
 
 data "aws_ami" "amazon_linux" {
@@ -151,3 +162,50 @@ resource "aws_instance" "vault_server" {
     Name = "${local.name}-vault-server"
   }
 }
+
+# attaching Jenkins iam role to jenkins server to assume ssm role
+resource "aws_iam_role" "ssm_jenkins_role" {
+  name = "${local.name}-ssm_jenkins_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_jenkins_role_attachment" {
+  role       = aws_iam_role.ssm_jenkins_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+}
+
+resource "aws_iam_instance_profile" "ssm_jenkins_instance_profile" {
+  name = "${local.name}-ssm_jenkins_instance_profile"
+  role = aws_iam_role.ssm_jenkins_role.name
+}
+
+# Attach the administrative access policy to the role
+resource "aws_iam_role_policy_attachment" "ssm_jenkins_admin_access_attachment" {
+  role       = aws_iam_role.ssm_jenkins_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "example.com"
+  validation_method = "DNS"
+
+  tags = {
+    Environment = "test"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
