@@ -1,0 +1,12 @@
+variable "name" {}
+variable "cidr_block" {}
+variable "pub_subnet1_cidr" {}
+variable "pub_subnet1_az" {}
+variable "pub_subnet2_cidr" {}
+variable "pub_subnet2_az" {}
+variable "priv_subnet1_cidr" {}
+variable "priv_subnet1_az" {}
+variable "priv_subnet2_cidr" {}
+variable "priv_subnet2_az" {}
+variable "availability_zone" {}
+variable "region" {}
