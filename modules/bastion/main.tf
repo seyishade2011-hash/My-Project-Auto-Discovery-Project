@@ -83,7 +83,7 @@ resource "aws_launch_template" "bastion_launch_template" {
         name = aws_iam_instance_profile.bastion_instance_profile.name
     }
   user_data = base64encode(templatefile("${path.module}/userdata.sh", {
-    privatekey = var.privatekey,
+    private_key = var.private_key,
     nr_key     = var.nr_key,
     nr_acc_id  = var.nr_acc_id,
     region     = var.region

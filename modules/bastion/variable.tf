@@ -11,7 +11,7 @@ variable "bastion_sg_id" {}
 variable "vpc_id" {}
 variable "bastion_host_id" {}
 variable "bastion_asg_id" {}
-variable "privatekey" {}
+variable "private_key" {}
 variable "nr_key" {}
 variable "nr_acc_id" {}
 variable "region" {}
