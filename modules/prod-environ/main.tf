@@ -33,23 +33,23 @@ resource "aws_security_group" "prod_alb_sg" {
   vpc_id = var.vpc_id
 
   ingress {
-    from_port = 80
-    to_port   = 80
-    protocol  = "tcp"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port = 443
-    to_port   = 443
-    protocol  = "tcp"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -120,7 +120,7 @@ resource "aws_launch_template" "prod" {
   }
 
   user_data = base64encode(
-    file("${path.module}/userdata.sh")
+    file("${path.module}/dockerscript.sh")
   )
 
   tag_specifications {
@@ -154,7 +154,7 @@ resource "aws_autoscaling_group" "prod" {
     aws_lb_target_group.prod_tg.arn
   ]
 
-  health_check_type = "ELB"
+  health_check_type         = "ELB"
   health_check_grace_period = 120
 
   tag {

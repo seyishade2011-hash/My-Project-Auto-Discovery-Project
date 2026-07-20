@@ -1,7 +1,7 @@
 #!/bin/bash
 # Setup SSH Key
 mkdir -p /home/ubuntu/.ssh
-echo "${privatekey}" > /home/ubuntu/.ssh/id_rsa
+echo "${private_key}" > /home/ubuntu/.ssh/id_rsa
 chmod 400 /home/ubuntu/.ssh/id_rsa
 chown ubuntu:ubuntu /home/ubuntu/.ssh/id_rsa
 # Set hostname

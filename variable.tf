@@ -70,4 +70,20 @@ variable "availability_zone" {
   type = string
 }
 
+variable "bucket_name" {
+  type = string
+}
 
+variable "kms_key_id" {
+  type = string
+}
+
+variable "vault_sg_cidr" {
+  description = "CIDR block of the Vault subnet or host"
+  type        = string
+}
+
+variable "vault_vpc_cidr" {
+  description = "CIDR block of the Vault VPC"
+  type        = string
+}

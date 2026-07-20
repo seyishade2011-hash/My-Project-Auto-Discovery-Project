@@ -4,49 +4,49 @@ locals {
 
 # Create a resource vpc
 resource "aws_vpc" "vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block       = "10.0.0.0/16"
   instance_tenancy = "default"
-    tags = {
-        Name = "${local.name}-vpc"
-    }   
+  tags = {
+    Name = "${local.name}-vpc"
+  }
 }
 
 # Create a resource public subnet1
 resource "aws_subnet" "pub_subnet1" {
-  vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "eu-west-1a"
+  vpc_id                  = aws_vpc.vpc.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "eu-west-1a"
   map_public_ip_on_launch = true
-    tags = {
-        Name = "${local.name}-subnet1"
-    }   
+  tags = {
+    Name = "${local.name}-subnet1"
+  }
 }
 
 # Create a resource public subnet2
 resource "aws_subnet" "pub_subnet2" {
-  vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "eu-west-1b"
+  vpc_id                  = aws_vpc.vpc.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "eu-west-1b"
   map_public_ip_on_launch = true
-    tags = {
-        Name = "${local.name}-subnet2"
-    }   
+  tags = {
+    Name = "${local.name}-subnet2"
+  }
 }
 
 # Create a resource internet gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.vpc.id
-    tags = {
-        Name = "${local.name}-igw"
-    }   
+  tags = {
+    Name = "${local.name}-igw"
+  }
 }
 
 # Create a resource route table
 resource "aws_route_table" "rt" {
   vpc_id = aws_vpc.vpc.id
-    tags = {
-        Name = "${local.name}-rt"
-    }   
+  tags = {
+    Name = "${local.name}-rt"
+  }
 }
 
 # Create a resource route       
@@ -60,7 +60,7 @@ resource "aws_route" "route" {
 resource "aws_route_table_association" "rta1" {
   subnet_id      = aws_subnet.pub_subnet1.id
   route_table_id = aws_route_table.rt.id
-} 
+}
 
 # Create a resource route table association for subnet2
 resource "aws_route_table_association" "rta2" {
@@ -69,7 +69,7 @@ resource "aws_route_table_association" "rta2" {
 }
 
 # Create a resource security group
-resource "aws_security_group" "sg" {  
+resource "aws_security_group" "sg" {
   name        = "${local.name}-sg"
   description = "Allow SSH, jenkins and vault traffic"
   vpc_id      = aws_vpc.vpc.id
@@ -82,16 +82,16 @@ resource "aws_security_group" "sg" {
   }
 
   ingress {
-    from_port  = 8080
-    to_port    = 8080
-    protocol   = "tcp"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port  = 8200
-    to_port    = 8200
-    protocol   = "tcp"
+    from_port   = 8200
+    to_port     = 8200
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -114,14 +114,14 @@ resource "tls_private_key" "key" {
 }
 
 resource "local_file" "private_key" {
-  content = tls_private_key.key.private_key_pem
-  filename = "${local.name}-key.pem"
+  content         = tls_private_key.key.private_key_pem
+  filename        = "${local.name}-key.pem"
   file_permission = "400"
 }
 
-resource "aws_key_pair" "public_key" { 
-  key_name   = "${local.name}-key" 
-  public_key = tls_private_key.key.public_key_openssh 
+resource "aws_key_pair" "public_key" {
+  key_name   = "${local.name}-key"
+  public_key = tls_private_key.key.public_key_openssh
 }
 
 data "aws_ami" "amazon_linux" {
@@ -139,27 +139,27 @@ data "aws_ami" "amazon_linux" {
 
 # create a resource EC2 instance for jenkins server
 resource "aws_instance" "jenkins_server" {
-  ami     = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
-  subnet_id = aws_subnet.pub_subnet1.id
-  vpc_security_group_ids = [aws_security_group.sg.id]
-  key_name = aws_key_pair.public_key.key_name
+  ami                         = data.aws_ami.amazon_linux.id
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.pub_subnet1.id
+  vpc_security_group_ids      = [aws_security_group.sg.id]
+  key_name                    = aws_key_pair.public_key.key_name
   associate_public_ip_address = true
-  iam_instance_profile = aws_iam_instance_profile.ssm_jenkins_instance_profile.name
+  iam_instance_profile        = aws_iam_instance_profile.ssm_jenkins_instance_profile.name
   root_block_device {
     volume_size = 20    # Size in GB
     volume_type = "gp3" # General Purpose SSD (recommended)
     encrypted   = true  # Enable encryption (best practice)
   }
   user_data = templatefile("./jenkins_userdata.sh", {
- 
+
     region = var.region
   })
   metadata_options {
     http_tokens = "required"
- 
+
   }
- 
+
   tags = {
     Name = "${local.name}-jenkins-server"
   }
@@ -167,14 +167,14 @@ resource "aws_instance" "jenkins_server" {
 
 # create a resource EC2 instance for vault server
 resource "aws_instance" "vault_server" {
-  ami   = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
-  subnet_id = aws_subnet.pub_subnet2.id
-  vpc_security_group_ids = [aws_security_group.sg.id]
-  key_name = aws_key_pair.public_key.key_name
+  ami                         = data.aws_ami.amazon_linux.id
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.pub_subnet2.id
+  vpc_security_group_ids      = [aws_security_group.sg.id]
+  key_name                    = aws_key_pair.public_key.key_name
   associate_public_ip_address = true
-  iam_instance_profile = aws_iam_instance_profile.vault_ssm_profile.name
-root_block_device {
+  iam_instance_profile        = aws_iam_instance_profile.vault_ssm_profile.name
+  root_block_device {
     volume_size = 20
     volume_type = "gp3"
     encrypted   = true
@@ -281,7 +281,7 @@ resource "aws_elb" "elb_jenkins" {
   name            = "${local.name}-elb-jenkins"
   security_groups = [aws_security_group.jenkins_elb_sg.id]
   subnets         = [aws_subnet.pub_subnet1.id, aws_subnet.pub_subnet2.id] # Use first available subnet
- 
+
   listener {
     instance_port      = 8080
     instance_protocol  = "HTTP"
@@ -317,7 +317,7 @@ resource "aws_route53_record" "jenkins" {
     evaluate_target_health = true
   }
 }
- 
+
 # create KMS key to manage vault unseal keys
 resource "aws_kms_key" "vault" {
   description             = "An example symmetric encryption KMS key"
@@ -327,6 +327,13 @@ resource "aws_kms_key" "vault" {
     Name = "${local.name}-vault-kms-key"
   }
 }
+
+# create an alias for the KMS key
+resource "aws_kms_alias" "vault" {
+  name          = "alias/seyi-vault-kms-key"
+  target_key_id = aws_kms_key.vault.key_id
+}
+
 # Security Group for ELB to allow HTTP traffic
 resource "aws_security_group" "vault_sg" {
   name        = "${local.name}-vault-sg"

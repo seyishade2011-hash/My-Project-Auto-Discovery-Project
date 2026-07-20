@@ -5,19 +5,19 @@ resource "aws_security_group" "nexus_sg" {
   vpc_id      = var.vpc_id
 
   ingress {
-  description     = "SSH from Bastion"
-  from_port       = 22
-  to_port         = 22
-  protocol        = "tcp"
-  security_groups = [var.bastion_sg_id]
-}
+    description     = "SSH from Bastion"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [var.bastion_sg_id]
+  }
   ingress {
-  description     = "Nexus UI from ALB"
-  from_port       = 8081
-  to_port         = 8081
-  protocol        = "tcp"
-  security_groups = [aws_security_group.nexus_alb_sg.id]
-}
+    description     = "Nexus UI from ALB"
+    from_port       = 8081
+    to_port         = 8081
+    protocol        = "tcp"
+    security_groups = [aws_security_group.nexus_alb_sg.id]
+  }
 
   egress {
     from_port   = 0
@@ -38,9 +38,9 @@ data "aws_ami" "rhel" {
   owners = ["309956199498"] # Red Hat
 
   filter {
-  name   = "name"
-  values = ["RHEL-8*_HVM-*"]
-}
+    name   = "name"
+    values = ["RHEL-8*_HVM-*"]
+  }
 
   filter {
     name   = "architecture"
@@ -51,16 +51,16 @@ data "aws_ami" "rhel" {
 # create a resource nexus instance
 resource "aws_instance" "nexus" {
   ami                         = data.aws_ami.rhel.id
-  instance_type              = var.instance_type
-  subnet_id                  = var.public_subnet1_id
-  vpc_security_group_ids     = [aws_security_group.nexus_sg.id]
-  key_name                   = var.key_pair_name
-  iam_instance_profile       = aws_iam_instance_profile.nexus_profile.name
+  instance_type               = var.instance_type
+  subnet_id                   = var.public_subnet1_id
+  vpc_security_group_ids      = [aws_security_group.nexus_sg.id]
+  key_name                    = var.key_pair_name
+  iam_instance_profile        = aws_iam_instance_profile.nexus_profile.name
   associate_public_ip_address = true
   depends_on = [
-    aws_instance_profile.nexus_profile,
+    aws_iam_instance_profile.nexus_profile,
     aws_iam_role_policy_attachment.ssm
-    ]
+  ]
 
   user_data = file("${path.module}/userdata.sh")
 
@@ -133,18 +133,18 @@ resource "aws_security_group" "nexus_alb_sg" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    }
+  }
 
-    egress {
+  egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    }
+  }
 
-    tags = {
+  tags = {
     Name = "${var.name}-nexus-alb-sg"
-    }
+  }
 }
 
 # create a resource target group for nexus instance
@@ -155,14 +155,14 @@ resource "aws_lb_target_group" "nexus_tg" {
   vpc_id   = var.vpc_id
 
   health_check {
-  enabled             = true
-  path                = "/"
-  port                = "traffic-port"
-  interval            = 30
-  timeout             = 10
-  healthy_threshold   = 3
-  unhealthy_threshold = 5
-}
+    enabled             = true
+    path                = "/"
+    port                = "traffic-port"
+    interval            = 30
+    timeout             = 10
+    healthy_threshold   = 3
+    unhealthy_threshold = 5
+  }
 }
 
 # create a resource target group attachment for nexus instance

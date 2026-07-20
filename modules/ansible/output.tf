@@ -17,3 +17,7 @@ output "ansible_security_group_id" {
 output "ansible_role_arn" {
   value = aws_iam_role.ansible_role.arn
 }
+
+output "public_ip" {
+  value = aws_instance.ansible_server.public_ip
+}

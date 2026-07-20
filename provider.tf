@@ -1,8 +1,8 @@
 provider "aws" {
-  region  = "eu-west-1"
+  region = "eu-west-1"
   # profile = "pet-adoption"
 }
- 
+
 terraform {
   backend "s3" {
     bucket       = "seyi-my-project-bucket-2026"
@@ -13,6 +13,6 @@ terraform {
     # profile      = "pet-adoption"
   }
 }
- 
+
 
  

@@ -14,8 +14,12 @@ output "sonarqube_url" {
   value = module.sonarqube.sonarqube_url
 }
 
-output "vault_ip" {
-  value = module.vault.vault_private_ip
+output "vault_sg_cidr" {
+  value = var.vault_sg_cidr
+}
+
+output "vault_vpc_cidr" {
+  value = var.vault_vpc_cidr
 }
 
 output "database_endpoint" {
