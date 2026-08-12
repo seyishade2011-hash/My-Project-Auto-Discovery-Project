@@ -140,7 +140,7 @@ data "aws_ami" "amazon_linux" {
 # create a resource EC2 instance for jenkins server
 resource "aws_instance" "jenkins_server" {
   ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = "t2.micro"
+  instance_type               = "t3.medium"
   subnet_id                   = aws_subnet.pub_subnet1.id
   vpc_security_group_ids      = [aws_security_group.sg.id]
   key_name                    = aws_key_pair.public_key.key_name
@@ -230,8 +230,9 @@ resource "aws_iam_role_policy_attachment" "ssm_jenkins_admin_access_attachment" 
 
 # Create a resource ACM certificate with DNS validation for the domain name seyi-prj2025.space.
 resource "aws_acm_certificate" "cert" {
-  domain_name       = "seyi-prj2025.space"
-  validation_method = "DNS"
+  domain_name               = "seyi-prj2025.space"
+  validation_method         = "DNS"
+  subject_alternative_names = ["*.seyi-prj2025.space"]
 
   tags = {
     Environment = "test"

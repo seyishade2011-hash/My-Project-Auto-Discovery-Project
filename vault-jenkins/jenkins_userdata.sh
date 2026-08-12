@@ -1,64 +1,136 @@
 #!/bin/bash
-sudo yum update -y
-# install dependencies-wget,pip,git,maven
-sudo yum install wget git pip maven -y
-# install amazon-ssm-agent
-sudo dnf install -y https://s3."${region}".amazonaws.com/amazon-ssm-"${region}"/latest/linux_amd64/amazon-ssm-agent.rpm
-curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm%22 -o "session-manager-plugin.rpm"
-sudo yum install -y session-manager-plugin.rpm
-# get jenkins repo
-sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-#import jenkins key
-sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
-sudo yum upgrade -y
-# install  java first and then jenkins
-sudo yum install java-17-openjdk -y
-sudo yum install jenkins -y
-#enable systemd integration on jenkins
-sudo sed -i 's/^User=jenkins/User=root/' /usr/lib/systemd/system/jenkins.service
-sudo systemctl daemon-reload
-sudo systemctl start jenkins
-sudo systemctl enable jenkins
-sudo systemctl start jenkins
-sudo usermod -aG jenkins ec2-user
- 
-# Install trivy for container scanning
-RELEASE_VERSION=$(grep -Po '(?<=VERSION_ID=")[0-9]' /etc/os-release)
-cat << EOT | sudo tee -a /etc/yum.repos.d/trivy.repo
-[trivy]
-name=Trivy repository
-baseurl=https://aquasecurity.github.io/trivy-repo/rpm/releases/$RELEASE_VERSION/\$basearch/
-gpgcheck=0
-enabled=1
-EOT
-sudo yum -y update
-sudo yum -y install trivy
- 
-# install docker
-sudo yum install -y yum-utils
-sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-sudo yum install docker-ce -y
-sudo service docker start
-sudo systemctl start docker
-sudo systemctl enable docker
-# add jenkins and ec2-user to docker group
-sudo usermod -aG docker ec2-user
-sudo usermod -aG docker jenkins
-sudo chmod 777 /var/run/docker.sock
- 
-# Installing awscli
-sudo yum install unzip -y
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
-sudo ln -svf /usr/local/bin/aws /usr/bin/aws
- 
-#  install newrelic agent
-NEW_RELIC_API_KEY="REPLACE_ME"
-sudo hostnamectl set-hostname jenkins
- 
- 
- 
- 
- 
- 
+set -e
+
+exec > >(tee /var/log/jenkins-userdata.log)
+exec 2>&1
+
+#############################################
+# Update System
+#############################################
+
+yum update -y
+
+#############################################
+# Install Required Packages
+#############################################
+
+yum install -y \
+  git \
+  wget \
+  curl \
+  unzip \
+  zip \
+  tar \
+  jq \
+  yum-utils \
+  fontconfig \
+  dejavu-sans-fonts \
+  maven
+
+#############################################
+# Install Java 21 - Amazon Corretto
+#############################################
+
+rpm --import https://yum.corretto.aws/corretto.key
+
+curl -L -o /etc/yum.repos.d/corretto.repo \
+  https://yum.corretto.aws/corretto.repo
+
+yum install -y java-21-amazon-corretto-devel
+
+java -version
+
+#############################################
+# Install Jenkins
+#############################################
+
+wget -O /etc/yum.repos.d/jenkins.repo \
+  https://pkg.jenkins.io/rpm-stable/jenkins.repo
+
+rpm --import https://pkg.jenkins.io/rpm-stable/jenkins.io-2026.key
+
+yum upgrade -y
+
+yum install -y jenkins
+
+#############################################
+# Install Docker
+#############################################
+
+amazon-linux-extras install docker -y
+
+systemctl enable docker
+systemctl start docker
+
+usermod -aG docker ec2-user
+usermod -aG docker jenkins
+
+#############################################
+# Install AWS CLI v2
+#############################################
+
+cd /tmp
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
+  -o awscliv2.zip
+
+unzip -o awscliv2.zip
+
+./aws/install
+
+#############################################
+# Install Terraform 1.14.8
+#############################################
+
+cd /tmp
+
+wget https://releases.hashicorp.com/terraform/1.14.8/terraform_1.14.8_linux_amd64.zip
+
+unzip -o terraform_1.14.8_linux_amd64.zip
+
+mv terraform /usr/local/bin/terraform
+
+ln -sf /usr/local/bin/terraform /usr/bin/terraform
+
+terraform version
+
+#############################################
+# Start Jenkins
+#############################################
+
+systemctl daemon-reload
+
+systemctl enable jenkins
+systemctl start jenkins
+
+#############################################
+# Restart Docker
+#############################################
+
+systemctl restart docker
+
+#############################################
+# Restart Jenkins
+#############################################
+
+systemctl restart jenkins
+
+#############################################
+# Save Initial Jenkins Password
+#############################################
+
+if [ -f /var/lib/jenkins/secrets/initialAdminPassword ]; then
+    cp /var/lib/jenkins/secrets/initialAdminPassword \
+       /home/ec2-user/jenkins-password.txt
+
+    chown ec2-user:ec2-user \
+      /home/ec2-user/jenkins-password.txt
+fi
+
+#############################################
+# Completion
+#############################################
+
+echo "====================================="
+echo " Jenkins Installation Complete "
+echo "====================================="
