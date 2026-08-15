@@ -52,3 +52,9 @@ output "key_pair_id" {
   description = "AWS Key Pair ID"
   value       = aws_key_pair.key_pair.id
 }
+
+output "private_key" {
+  description = "Generated private SSH key"
+  value       = tls_private_key.key_pair.private_key_pem
+  sensitive   = true
+}

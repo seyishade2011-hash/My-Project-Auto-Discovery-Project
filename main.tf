@@ -27,9 +27,9 @@ module "bastion" {
   vpc_id           = module.vpc.vpc_id
   public_subnet_id = module.vpc.public_subnet1_id
 
-  key_pair_name = var.key_pair_name
+  key_pair_name = module.vpc.key_pair_name
 
-  private_key = var.private_key
+  private_key = module.vpc.private_key
 
   nr_key    = var.nr_key
   nr_acc_id = var.nr_acc_id
@@ -47,7 +47,7 @@ module "database" {
   private_subnet1_id = module.vpc.private_subnet1_id
   private_subnet2_id = module.vpc.private_subnet2_id
 
-  vault_sg_cidr = var.vault_sg_cidr
+  vault_sg_cidr  = var.vault_sg_cidr
   vault_vpc_cidr = var.vault_vpc_cidr
 }
 
@@ -67,7 +67,7 @@ module "nexus" {
 
   bastion_sg_id = module.bastion.bastion_sg_id
 
-  key_pair_name = var.key_pair_name
+  key_pair_name = module.vpc.key_pair_name
 
   zone_id = data.aws_route53_zone.main.zone_id
 
@@ -91,7 +91,7 @@ module "sonarqube" {
 
   bastion_sg_id = module.bastion.bastion_sg_id
 
-  key_pair_name = var.key_pair_name
+  key_pair_name = module.vpc.key_pair_name
 
   db_host     = module.database.db_endpoint
   db_name     = module.database.db_name
@@ -116,13 +116,13 @@ module "ansible" {
 
   bastion_sg_id = module.bastion.bastion_sg_id
 
-  key_pair_name = var.key_pair_name
+  key_pair_name = module.vpc.key_pair_name
 
   nexus_ip = module.nexus.nexus_public_ip
 
   bucket_name = "${var.name}-bucket"
 
-  private_key = var.private_key
+  private_key = module.vpc.private_key
 
   nr_key    = var.nr_key
   nr_acc_id = var.nr_acc_id
@@ -151,7 +151,7 @@ module "prod-environ" {
 
   bastion_sg_id = module.bastion.bastion_sg_id
 
-  key_pair_name = var.key_pair_name
+  key_pair_name = module.vpc.key_pair_name
 }
 
 
@@ -178,7 +178,7 @@ module "stage-environ" {
 
   bastion_sg_id = module.bastion.bastion_sg_id
 
-  key_pair_name = var.key_pair_name
+  key_pair_name = module.vpc.key_pair_name
 
 }
 

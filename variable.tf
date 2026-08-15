@@ -10,10 +10,6 @@ variable "domain_name" {
   type = string
 }
 
-variable "key_pair_name" {
-  type = string
-}
-
 variable "instance_type" {
   default = "t3.medium"
 }
@@ -23,10 +19,6 @@ variable "nr_key" {
 }
 
 variable "nr_acc_id" {
-  sensitive = true
-}
-
-variable "private_key" {
   sensitive = true
 }
 
