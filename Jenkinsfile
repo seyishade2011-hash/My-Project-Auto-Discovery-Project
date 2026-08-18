@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+    }
+
     environment {
         AWS_DEFAULT_REGION = 'eu-west-1'
         AWS_REGION         = 'eu-west-1'
@@ -65,20 +70,35 @@ pipeline {
 
         stage('Terraform Plan') {
             steps {
-                sh '''
-                    set -e
+                withCredentials([
+                    file(
+                        credentialsId: 'terraform-tfvars',
+                        variable: 'TFVARS_FILE'
+                    )
+                ]) {
+                    sh '''
+                        set -e
 
-                    terraform plan \
-                      -input=false \
-                      -out=tfplan.tfplan
-                '''
+                        echo "===== Terraform Plan ====="
+
+                        terraform plan \
+                          -input=false \
+                          -var-file="$TFVARS_FILE" \
+                          -out=tfplan.tfplan
+                    '''
+                }
             }
         }
 
         stage('Terraform Apply') {
             steps {
+                input message: 'Terraform plan succeeded. Proceed with infrastructure provisioning?', \
+                      ok: 'Provision Infrastructure'
+
                 sh '''
                     set -e
+
+                    echo "===== Terraform Apply ====="
 
                     terraform apply \
                       -input=false \
