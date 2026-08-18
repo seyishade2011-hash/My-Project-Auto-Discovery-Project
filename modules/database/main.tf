@@ -102,8 +102,8 @@ resource "aws_db_instance" "vault_db" {
   vpc_security_group_ids = [
     aws_security_group.db_sg.id
   ]
-  monitoring_interval = 60
-  monitoring_role_arn = aws_iam_role.rds_monitoring_role.arn
+  monitoring_interval          = 60
+  monitoring_role_arn          = aws_iam_role.rds_monitoring_role.arn
   performance_insights_enabled = true
 
   tags = {
