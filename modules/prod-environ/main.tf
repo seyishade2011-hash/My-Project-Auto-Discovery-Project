@@ -226,10 +226,10 @@ resource "aws_lb_listener" "https" {
 resource "aws_route53_record" "prod" {
 
   zone_id = var.zone_id
+  name    = "app"
+  type    = "A"
 
-  name = "app"
-
-  type = "A"
+  allow_overwrite = true
 
   alias {
     name = aws_lb.prod_alb.dns_name
