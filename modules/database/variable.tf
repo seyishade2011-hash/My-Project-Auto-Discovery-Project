@@ -9,3 +9,4 @@ variable "private_subnet2_id" {}
 variable "vault_sg_cidr" {}
 
 variable "vault_vpc_cidr" {}
+variable "vault_iam_role_name" {}

@@ -9,3 +9,6 @@ variable "public_subnet1_id" {}
 variable "public_subnet2_id" {}
 variable "zone_id" {}
 variable "acm_certificate_arn" {}
+variable "nr_key" {}
+variable "nr_acc_id" {}
+variable "nexus_ip" {}

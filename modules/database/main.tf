@@ -135,7 +135,7 @@ resource "aws_iam_policy" "vault_secret_policy" {
 # create a resource iam role policy attachment to attach the policy to vault instance role
 resource "aws_iam_role_policy_attachment" "vault_secret_policy_attachment" {
 
-  role       = var.vault_sg_cidr
+ role = var.vault_iam_role_name
   policy_arn = aws_iam_policy.vault_secret_policy.arn
 }
 
@@ -164,7 +164,7 @@ resource "aws_iam_policy" "vault_rds_policy" {
 # create a resource iam role policy attachment to attach the policy to vault instance role
 resource "aws_iam_role_policy_attachment" "vault_rds_policy_attachment" {
 
-  role       = var.vault_sg_cidr
+  role       = var.vault_iam_role_name
   policy_arn = aws_iam_policy.vault_rds_policy.arn
 }
 
