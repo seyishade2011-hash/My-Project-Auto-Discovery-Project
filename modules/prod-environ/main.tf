@@ -120,12 +120,12 @@ resource "aws_launch_template" "prod" {
   }
 
   user_data = base64encode(
-  templatefile("${path.module}/dockerscript.sh", {
-    nexus_ip = var.nexus_ip
-    nr_key   = var.nr_key
-    nr_acc_id = var.nr_acc_id
-  })
-)
+    templatefile("${path.module}/dockerscript.sh", {
+      nexus_ip  = var.nexus_ip
+      nr_key    = var.nr_key
+      nr_acc_id = var.nr_acc_id
+    })
+  )
   tag_specifications {
     resource_type = "instance"
 

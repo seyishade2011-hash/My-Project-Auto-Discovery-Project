@@ -20,12 +20,12 @@ resource "aws_security_group" "nexus_sg" {
   }
 
   ingress {
-  description = "Docker Registry from VPC"
-  from_port   = 8085
-  to_port     = 8085
-  protocol    = "tcp"
-  cidr_blocks = ["192.168.0.0/16"]
-}
+    description = "Docker Registry from VPC"
+    from_port   = 8085
+    to_port     = 8085
+    protocol    = "tcp"
+    cidr_blocks = ["192.168.0.0/16"]
+  }
 
   egress {
     from_port   = 0

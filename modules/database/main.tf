@@ -5,10 +5,10 @@ resource "aws_security_group" "db_sg" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description     = "PostgreSQL from Vault"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
+    description = "PostgreSQL from Vault"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
     cidr_blocks = [var.vault_vpc_cidr]
   }
 
@@ -135,7 +135,7 @@ resource "aws_iam_policy" "vault_secret_policy" {
 # create a resource iam role policy attachment to attach the policy to vault instance role
 resource "aws_iam_role_policy_attachment" "vault_secret_policy_attachment" {
 
- role = var.vault_iam_role_name
+  role       = var.vault_iam_role_name
   policy_arn = aws_iam_policy.vault_secret_policy.arn
 }
 
