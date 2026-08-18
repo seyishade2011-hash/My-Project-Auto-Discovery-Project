@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-apt install -y unzip jq
+yum install -y unzip jq wget
 # Define Vault version
 VAULT_VERSION="1.18.3"
 # Download Vault binary
@@ -59,8 +59,6 @@ KillMode=process
 KillSignal=SIGINT
 Restart=on-failure
 RestartSec=5
-StartLimitInterval=60
-StartLimitBurst=3
 LimitNOFILE=65536
 LimitMEMLOCK=infinity
 [Install]
@@ -79,14 +77,24 @@ EOT
 # Enable and start the Vault service
 sudo systemctl enable vault
 sudo systemctl start vault
-sleep 20
+for i in {1..30}; do
+    if curl -s http://127.0.0.1:8200/v1/sys/health >/dev/null; then
+        break
+    fi
+    sleep 2
+done
+
+if ! curl -s http://127.0.0.1:8200/v1/sys/health >/dev/null; then
+    echo "Vault failed to become ready"
+    exit 1
+fi
 # Initialize the vault server
-touch /home/ubuntu/vault_init.log
-vault operator init > /home/ubuntu/vault_init.log
-grep -o 'hvs\.[A-Za-z0-9]\{24\}' /home/ubuntu/vault_init.log > /home/ubuntu/token.txt
-TOKEN=$(</home/ubuntu/token.txt)
+touch /home/ec2-user/vault_init.log
+vault operator init > /home/ec2-user/vault_init.log
+grep -o 'hvs\.[A-Za-z0-9]\{24\}' /home/ec2-user/vault_init.log > /home/ec2-user/token.txt
+TOKEN=$(</home/ec2-user/token.txt)
 # Login to Vault
-vault login $TOKEN
+vault login "$TOKEN"
 # create secret engine and store secrets for the application database
 vault secrets enable -path=secret/ kv #directory to store secrets on the vault server
 vault kv put secret/database username=petclinic password=petclinic
