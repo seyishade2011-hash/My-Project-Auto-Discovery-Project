@@ -38,6 +38,10 @@ curl -L -o /etc/yum.repos.d/corretto.repo \
 
 yum install -y java-21-amazon-corretto-devel
 
+# Make Java 21 the system default
+alternatives --install /usr/bin/java java /usr/lib/jvm/java-21-amazon-corretto/bin/java 21000000
+alternatives --set java /usr/lib/jvm/java-21-amazon-corretto/bin/java
+
 java -version
 
 #############################################
@@ -52,6 +56,20 @@ rpm --import https://pkg.jenkins.io/rpm-stable/jenkins.io-2026.key
 yum upgrade -y
 
 yum install -y jenkins
+
+#############################################
+# Jenkins systemd compatibility
+#############################################
+
+mkdir -p /etc/systemd/system/jenkins.service.d
+
+cat > /etc/systemd/system/jenkins.service.d/override.conf <<'EOF'
+[Unit]
+StartLimitBurst=
+StartLimitIntervalSec=
+EOF
+
+systemctl daemon-reload
 
 #############################################
 # Install Docker
