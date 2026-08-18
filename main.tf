@@ -16,13 +16,15 @@ data "aws_kms_key" "vault" {
   key_id = "alias/seyi-vault-kms-key"
 }
 
-module "bastion" {
-  source = "./modules/bastion"
+data "aws_iam_role" "vault" {
+  name = "seyi-vault-jenkins-ssm-vault-role"
+}
 
+module "bastion" {
+  source        = "./modules/bastion"
   name          = var.name
   instance_type = var.instance_type
 
-  nexus_ip         = module.nexus.nexus_public_ip
   bucket_name      = "${var.name}-bucket"
   vpc_id           = module.vpc.vpc_id
   public_subnet_id = module.vpc.public_subnet1_id
@@ -49,6 +51,8 @@ module "database" {
 
   vault_sg_cidr  = var.vault_sg_cidr
   vault_vpc_cidr = var.vault_vpc_cidr
+
+  vault_iam_role_name = data.aws_iam_role.vault.name
 }
 
 module "nexus" {
@@ -118,7 +122,7 @@ module "ansible" {
 
   key_pair_name = module.vpc.key_pair_name
 
-  nexus_ip = module.nexus.nexus_public_ip
+  nexus_ip = module.nexus.nexus_private_ip
 
   bucket_name = "${var.name}-bucket"
 
@@ -152,6 +156,12 @@ module "prod-environ" {
   bastion_sg_id = module.bastion.bastion_sg_id
 
   key_pair_name = module.vpc.key_pair_name
+
+  nexus_ip = module.nexus.nexus_private_ip
+
+  nr_key    = var.nr_key
+  nr_acc_id = var.nr_acc_id
+
 }
 
 
@@ -180,6 +190,10 @@ module "stage-environ" {
 
   key_pair_name = module.vpc.key_pair_name
 
+  nexus_ip = module.nexus.nexus_private_ip
+
+  nr_key    = var.nr_key
+  nr_acc_id = var.nr_acc_id
 }
 
 module "vpc" {

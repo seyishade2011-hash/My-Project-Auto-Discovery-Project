@@ -1,6 +1,5 @@
 variable "name" {}
 variable "bucket_name" {}
-variable "nexus_ip" {}
 variable "private_key" {}
 variable "nr_key" {}
 variable "nr_acc_id" {}
