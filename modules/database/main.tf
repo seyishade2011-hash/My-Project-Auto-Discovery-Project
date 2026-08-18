@@ -40,8 +40,9 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 
 # create a resource random password for RDS instance
 resource "random_password" "db_password" {
-  length  = 20
-  special = true
+  length           = 20
+  special          = true
+  override_special = "!#$%&*+-_=?"
 }
 
 # create a resource RDS instance for vault database

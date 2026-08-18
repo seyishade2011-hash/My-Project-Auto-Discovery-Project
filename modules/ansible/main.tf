@@ -61,7 +61,7 @@ resource "aws_instance" "ansible_server" {
 
 # create a resource to store ansible script in s3 bucket
 resource "aws_s3_object" "ansible_script_object" {
-  bucket  = var.bucket_name
+  bucket = aws_s3_bucket.project_bucket.bucket
   key     = "ansible-script/ansible_script.sh"
   content = local.ansible_userdata
   acl     = "private"
@@ -69,7 +69,7 @@ resource "aws_s3_object" "ansible_script_object" {
 
 # create a resource to store ansible variable file in s3 bucket
 resource "aws_s3_object" "ansible_variable_file_object" {
-  bucket  = var.bucket_name
+  bucket = aws_s3_bucket.project_bucket.bucket
   key     = "ansible-script/ansible_variable_file.yml"
   content = <<-EOF
 NEXUS_IP: ${var.nexus_ip}:8085
