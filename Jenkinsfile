@@ -73,24 +73,60 @@ pipeline {
 
         stage('Terraform Plan') {
             steps {
-                sh '''
-                    set -e
+                withCredentials([
+                    string(
+                        credentialsId: 'newrelic-api-key',
+                        variable: 'TF_VAR_nr_key'
+                    ),
+                    string(
+                        credentialsId: 'newrelic-account-id',
+                        variable: 'TF_VAR_nr_acc_id'
+                    )
+                ]) {
+                    sh '''
+                        set -e
 
-                    if [ "$DEPLOY_ACTION" = "DESTROY" ]; then
-                        echo "===== Terraform Destroy Plan ====="
+                        cat > terraform.tfvars <<EOF
+name               = "seyi-project"
+domain_name        = "seyi-prj2025.space"
+nr_key             = "${TF_VAR_nr_key}"
+nr_acc_id          = "${TF_VAR_nr_acc_id}"
+pub_subnet1_cidr   = "10.0.1.0/24"
+pub_subnet2_cidr   = "10.0.2.0/24"
+priv_subnet1_cidr  = "10.0.3.0/24"
+priv_subnet2_cidr  = "10.0.4.0/24"
+pub_subnet1_az     = "eu-west-1a"
+pub_subnet2_az     = "eu-west-1b"
+priv_subnet1_az    = "eu-west-1a"
+priv_subnet2_az    = "eu-west-1b"
+vpc_cidr_block     = "10.0.0.0/16"
+availability_zone  = "eu-west-1a"
+bucket_name        = "seyi-project-ansible"
+kms_key_id         = "alias/seyi-vault-kms-key"
+vault_sg_cidr      = "10.0.2.0/24"
+vault_vpc_cidr     = "10.0.0.0/16"
+EOF
 
-                        terraform plan \
-                          -destroy \
-                          -input=false \
-                          -out=tfplan.tfplan
-                    else
-                        echo "===== Terraform Deployment Plan ====="
+                        echo "===== Terraform Variables Prepared ====="
 
-                        terraform plan \
-                          -input=false \
-                          -out=tfplan.tfplan
-                    fi
-                '''
+                        if [ "$DEPLOY_ACTION" = "DESTROY" ]; then
+                            echo "===== Terraform Destroy Plan ====="
+
+                            terraform plan \
+                              -destroy \
+                              -input=false \
+                              -var-file=terraform.tfvars \
+                              -out=tfplan.tfplan
+                        else
+                            echo "===== Terraform Deployment Plan ====="
+
+                            terraform plan \
+                              -input=false \
+                              -var-file=terraform.tfvars \
+                              -out=tfplan.tfplan
+                        fi
+                    '''
+                }
             }
         }
 
@@ -110,14 +146,47 @@ pipeline {
                     }
                 }
 
-                sh '''
-                    set -e
+                withCredentials([
+                    string(
+                        credentialsId: 'newrelic-api-key',
+                        variable: 'TF_VAR_nr_key'
+                    ),
+                    string(
+                        credentialsId: 'newrelic-account-id',
+                        variable: 'TF_VAR_nr_acc_id'
+                    )
+                ]) {
+                    sh '''
+                        set -e
 
-                    echo "===== Terraform Apply ====="
-                    terraform apply \
-                      -input=false \
-                      tfplan.tfplan
-                '''
+                        cat > terraform.tfvars <<EOF
+name               = "seyi-project"
+domain_name        = "seyi-prj2025.space"
+nr_key             = "${TF_VAR_nr_key}"
+nr_acc_id          = "${TF_VAR_nr_acc_id}"
+pub_subnet1_cidr   = "10.0.1.0/24"
+pub_subnet2_cidr   = "10.0.2.0/24"
+priv_subnet1_cidr  = "10.0.3.0/24"
+priv_subnet2_cidr  = "10.0.4.0/24"
+pub_subnet1_az     = "eu-west-1a"
+pub_subnet2_az     = "eu-west-1b"
+priv_subnet1_az    = "eu-west-1a"
+priv_subnet2_az    = "eu-west-1b"
+vpc_cidr_block     = "10.0.0.0/16"
+availability_zone  = "eu-west-1a"
+bucket_name        = "seyi-project-ansible"
+kms_key_id         = "alias/seyi-vault-kms-key"
+vault_sg_cidr      = "10.0.2.0/24"
+vault_vpc_cidr     = "10.0.0.0/16"
+EOF
+
+                        echo "===== Terraform Apply ====="
+
+                        terraform apply \
+                          -input=false \
+                          tfplan.tfplan
+                    '''
+                }
             }
         }
     }
@@ -125,7 +194,7 @@ pipeline {
     post {
         always {
             sh '''
-                rm -f tfplan.tfplan
+                rm -f tfplan.tfplan terraform.tfvars
             '''
         }
 
