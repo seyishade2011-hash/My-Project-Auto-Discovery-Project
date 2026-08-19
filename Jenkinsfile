@@ -1,6 +1,14 @@
 pipeline {
     agent any
 
+        parameters {
+        choice(
+            name: 'DEPLOY_ACTION',
+            choices: ['APPLY', 'DESTROY'],
+            description: 'Choose whether to provision or destroy the infrastructure.'
+        )
+    }
+
     options {
         skipDefaultCheckout(true)
         disableConcurrentBuilds()
@@ -68,37 +76,32 @@ pipeline {
             }
         }
 
-        stage('Terraform Plan') {
+                stage('Terraform Plan') {
             steps {
-                withCredentials([
-                    file(
-                        credentialsId: 'terraform-tfvars',
-                        variable: 'TFVARS_FILE'
-                    )
-                ]) {
-                    sh '''
-                        set -e
-
-                        echo "===== Terraform Plan ====="
-
-                        terraform plan \
-                          -input=false \
-                          -var-file="$TFVARS_FILE" \
-                          -out=tfplan.tfplan
-                    '''
-                }
-            }
-        }
-
-        stage('Terraform Apply') {
-            steps {
-                input message: 'Terraform plan succeeded. Proceed with infrastructure provisioning?', \
-                      ok: 'Provision Infrastructure'
-
                 sh '''
                     set -e
 
-                    echo "===== Terraform Apply ====="
+                    if [ "$DEPLOY_ACTION" = "DESTROY" ]; then
+                        terraform plan \
+                          -destroy \
+                          -input=false \
+                          -out=tfplan.tfplan
+                    else
+                        terraform plan \
+                          -input=false \
+                          -out=tfplan.tfplan
+                    fi
+                '''
+            }
+        }
+
+                stage('Terraform Apply') {
+            steps {
+                input message: "Proceed with ${DEPLOY_ACTION} infrastructure operation?", \
+                      ok: "Proceed"
+
+                sh '''
+                    set -e
 
                     terraform apply \
                       -input=false \
@@ -106,8 +109,7 @@ pipeline {
                 '''
             }
         }
-    }
-
+        
     post {
         always {
             sh '''
