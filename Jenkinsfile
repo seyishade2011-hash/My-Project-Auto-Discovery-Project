@@ -1,17 +1,12 @@
 pipeline {
     agent any
 
-        parameters {
+    parameters {
         choice(
             name: 'DEPLOY_ACTION',
             choices: ['APPLY', 'DESTROY'],
             description: 'Choose whether to provision or destroy the infrastructure.'
         )
-    }
-
-    options {
-        skipDefaultCheckout(true)
-        disableConcurrentBuilds()
     }
 
     environment {
@@ -76,17 +71,21 @@ pipeline {
             }
         }
 
-                stage('Terraform Plan') {
+        stage('Terraform Plan') {
             steps {
                 sh '''
                     set -e
 
                     if [ "$DEPLOY_ACTION" = "DESTROY" ]; then
+                        echo "===== Terraform Destroy Plan ====="
+
                         terraform plan \
                           -destroy \
                           -input=false \
                           -out=tfplan.tfplan
                     else
+                        echo "===== Terraform Deployment Plan ====="
+
                         terraform plan \
                           -input=false \
                           -out=tfplan.tfplan
@@ -95,21 +94,34 @@ pipeline {
             }
         }
 
-                stage('Terraform Apply') {
+        stage('Terraform Apply') {
             steps {
-                input message: "Proceed with ${DEPLOY_ACTION} infrastructure operation?", \
-                      ok: "Proceed"
+                script {
+                    if (params.DEPLOY_ACTION == 'DESTROY') {
+                        input(
+                            message: 'Terraform destroy plan succeeded. Proceed with infrastructure destruction?',
+                            ok: 'Destroy Infrastructure'
+                        )
+                    } else {
+                        input(
+                            message: 'Terraform deployment plan succeeded. Proceed with infrastructure provisioning?',
+                            ok: 'Provision Infrastructure'
+                        )
+                    }
+                }
 
                 sh '''
                     set -e
 
+                    echo "===== Terraform Apply ====="
                     terraform apply \
                       -input=false \
                       tfplan.tfplan
                 '''
             }
         }
-        
+    }
+
     post {
         always {
             sh '''
@@ -119,7 +131,7 @@ pipeline {
 
         success {
             echo '=========================================='
-            echo ' Jenkins infrastructure deployment SUCCESS'
+            echo ' Jenkins infrastructure operation SUCCESS'
             echo '=========================================='
         }
 
