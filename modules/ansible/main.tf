@@ -165,7 +165,8 @@ resource "null_resource" "ansible_setup" {
 
 # create a s3 project bucket to store ansible script and variable file
 resource "aws_s3_bucket" "project_bucket" {
+  bucket        = "${var.name}-ansible"
+  force_destroy = true
 
-  bucket = "${var.name}-ansible"
-
+  # existing configuration...
 }
