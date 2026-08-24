@@ -95,7 +95,7 @@ resource "aws_db_instance" "vault_db" {
 
   backup_retention_period = 7
 
-  skip_final_snapshot = true
+  skip_final_snapshot =  true
 
   db_subnet_group_name = aws_db_subnet_group.db_subnet_group.name
 
