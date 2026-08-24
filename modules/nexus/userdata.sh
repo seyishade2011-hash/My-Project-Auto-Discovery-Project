@@ -46,7 +46,8 @@ echo "Creating systemd service..."
 cat <<EOF > /etc/systemd/system/nexus.service
 [Unit]
 Description=Nexus Repository Manager
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=forking
@@ -62,8 +63,21 @@ EOF
 
 echo "Reloading systemd..."
 systemctl daemon-reload
-systemctl enable nexus
+
+echo "Starting Nexus manually..."
 systemctl start nexus
+
+sleep 10
+
+if systemctl is-active --quiet nexus; then
+    echo "Nexus service started successfully."
+    systemctl enable nexus
+else
+    echo "ERROR: Nexus failed to start."
+    systemctl status nexus --no-pager || true
+    journalctl -u nexus --no-pager -n 100 || true
+    exit 1
+fi
 
 echo "Waiting for Nexus to become available..."
 
