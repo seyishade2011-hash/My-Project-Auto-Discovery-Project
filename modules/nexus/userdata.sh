@@ -7,6 +7,11 @@ dnf update -y
 echo "Installing dependencies..."
 dnf install -y java-17-openjdk wget tar curl jq
 
+echo "Installing and starting SSM Agent..."
+dnf install -y amazon-ssm-agent
+systemctl enable amazon-ssm-agent
+systemctl start amazon-ssm-agent
+
 # Variables
 NEXUS_USER="nexus"
 NEXUS_VERSION="3.80.0-06"
